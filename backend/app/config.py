@@ -1,6 +1,8 @@
 import os
+import json
 from pydantic_settings import BaseSettings
-from typing import Optional
+from typing import Optional, Union, List
+from pydantic import field_validator
 
 class Settings(BaseSettings):
     APP_NAME: str = "TaxiGo Commercial API"
@@ -34,14 +36,31 @@ class Settings(BaseSettings):
     NOMINATIM_BASE_URL: str = "https://nominatim.openstreetmap.org"
     OSRM_BASE_URL: str = "https://router.project-osrm.org"
     
-    # CORS
-    CORS_ORIGINS: list[str] = [
+    # CORS - can be a list or a comma-separated string or '*'
+    CORS_ORIGINS: Union[List[str], str] = [
         "http://localhost:5173",
         "http://localhost:3000",
         "http://127.0.0.1:5173",
         "http://127.0.0.1:3000",
         "*"
     ]
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
+        if isinstance(v, str):
+            v_stripped = v.strip()
+            # If it's a JSON array string like '["*"]'
+            if v_stripped.startswith("[") and v_stripped.endswith("]"):
+                try:
+                    return json.loads(v_stripped)
+                except Exception:
+                    pass
+            # If it's a comma-separated string or single string like '*'
+            return [i.strip() for i in v_stripped.split(",") if i.strip()]
+        elif isinstance(v, (list, tuple)):
+            return list(v)
+        return ["*"]
 
     class Config:
         env_file = ".env"
