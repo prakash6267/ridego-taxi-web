@@ -1,0 +1,19 @@
+services:
+  # FastAPI Python Backend
+  - type: web
+    name: ridego-backend
+    env: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: PRIMARY_CONTACT_PHONE
+        value: "6267228958"
+      - key: DEFAULT_UPI_ID
+        value: "6267228958@upi"
